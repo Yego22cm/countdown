@@ -2,65 +2,33 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odliczanie do premier gier</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: white;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-    }
-    h1 {
-      margin-bottom: 20px;
+      padding: 20px;
+      background: #f4f4f4;
     }
     table {
-      width: 80%;
+      width: 100%;
       border-collapse: collapse;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+      margin-top: 20px;
+      background: #fff;
     }
     th, td {
-      padding: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
       text-align: center;
-      font-size: 1.1em;
     }
     th {
-      background-color: #333;
-    }
-    td {
-      background-color: #444;
-      background-size: cover;
-      background-position: center;
-      color: transparent;
-      position: relative;
-      font-weight: bold;
-    }
-    td::before {
-      content: attr(data-game);
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 1.5em;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-    }
-    .countdown {
-      font-size: 1.2em;
-      margin-top: 10px;
+      background: #eee;
     }
   </style>
 </head>
 <body>
 
-  <h1>Odliczanie do nadchodzących premier gier</h1>
-  <table id="countdownTable">
+  <h1>Odliczanie do nadchodzących premier</h1>
+  <table id="countdown-table">
     <thead>
       <tr>
         <th>Gra</th>
@@ -71,32 +39,32 @@
     </thead>
     <tbody>
       <tr>
-        <td style="background-image: url('https://duneawakening.com/assets/img/logo.png');" data-game="Dune: Awakening"></td>
+        <td>Dune: Awakening</td>
         <td>Beta Start</td>
-        <td>2025-06-05T00:00:00</td>
+        <td>2025-05-09T00:00:00</td>
         <td class="countdown"></td>
       </tr>
       <tr>
-        <td style="background-image: url('https://store.steampowered.com/app/2742830/Monster_Train_2/');" data-game="Monster Train 2"></td>
-        <td>Premiera</td>
+        <td>Monster Train 2</td>
+        <td>Full Release</td>
         <td>2025-05-21T00:00:00</td>
         <td class="countdown"></td>
       </tr>
       <tr>
-        <td style="background-image: url('https://store.ubisoft.com/us/tom-clancys-the-division-2---battle-for-brooklyn/6729fa4fdb0da455b4e93582.html?lang=en_US');" data-game="The Division 2: Battle for Brooklyn"></td>
-        <td>Premiera DLC</td>
+        <td>The Division 2: Battle for Brooklyn DLC</td>
+        <td>Release</td>
         <td>2025-05-27T00:00:00</td>
         <td class="countdown"></td>
       </tr>
       <tr>
-        <td style="background-image: url('https://www.kojimaproductions.jp/en/death-stranding-2');" data-game="Death Stranding 2: On the Beach"></td>
-        <td>Premiera</td>
-        <td>2025-06-26T00:00:00</td>
+        <td>Death Stranding 2: On the Beach</td>
+        <td>Early Access</td>
+        <td>2025-06-24T00:00:00</td>
         <td class="countdown"></td>
       </tr>
       <tr>
-        <td style="background-image: url('https://www.playstation.com/en-us/games/ghost-of-yotei/');" data-game="Ghost of Yōtei"></td>
-        <td>Premiera</td>
+        <td>Ghost of Yōtei</td>
+        <td>Release</td>
         <td>2025-10-02T00:00:00</td>
         <td class="countdown"></td>
       </tr>
@@ -104,30 +72,36 @@
   </table>
 
   <script>
-    function updateCountdowns() {
+    // Pobiera wszystkie komórki, w których wyświetlamy odliczanie
+    const rows = document.querySelectorAll('#countdown-table tbody tr');
+
+    function updateCountdown() {
       const now = new Date();
-      const rows = document.querySelectorAll('#countdownTable tbody tr');
 
       rows.forEach(row => {
-        const releaseDate = new Date(row.cells[2].textContent);
-        const countdownCell = row.querySelector('.countdown');
-        const timeDiff = releaseDate - now;
+        const dateCell = row.cells[2];
+        const targetDate = new Date(dateCell.textContent);
+        const diff = targetDate - now;
 
-        if (timeDiff <= 0) {
-          countdownCell.textContent = '—';
-        } else {
-          const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
-
-          countdownCell.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        if (diff <= 0) {
+          row.querySelector('.countdown').textContent = '—';
+          return;
         }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        row.querySelector('.countdown').textContent =
+          `${days}d ${hours}h ${minutes}m ${seconds}s`;
       });
     }
 
-    setInterval(updateCountdowns, 1000);
-    updateCountdowns();
+    // Aktualizuj odliczanie co 1 sekundę
+    setInterval(updateCountdown, 1000);
+    // Pierwsze wywołanie od razu przy wczytaniu
+    updateCountdown();
   </script>
 
 </body>
