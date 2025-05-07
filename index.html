@@ -4,105 +4,114 @@
   <meta charset="UTF-8">
   <title>Odliczanie do premier gier</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f4f4f4;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: #fff;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
-    }
-    th {
-      background: #eee;
-    }
+    body { font-family: Arial, sans-serif; background-color: #1e1e1e; color: #f0f0f0; padding: 20px; }
+    h1 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; border: 1px solid #444; text-align: center; }
+    th { background-color: #333; color: #fff; }
+    tr:nth-child(even) { background-color: #2a2a2a; }
+    tr:nth-child(odd) { background-color: #1e1e1e; }
+    .highlight-hot { background-color: #5c1e1e !important; color: #ff6666; }
+    .highlight-warm { background-color: #4e3b1f !important; color: #ffcc66; }
   </style>
 </head>
 <body>
-
-  <h1>Odliczanie do nadchodzących premier</h1>
-  <table id="countdown-table">
+  <h1>Odliczanie do premier gier</h1>
+  <button onclick="sortTable()">Sortuj odliczanie</button>
+  <table id="gameTable">
     <thead>
       <tr>
         <th>Gra</th>
-        <th>Wydarzenie</th>
-        <th>Data</th>
-        <th>Pozostało</th>
+        <th>Data premiery</th>
+        <th>Platformy</th>
+        <th>Odliczanie</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>Dune: Awakening</td>
-        <td>Beta Start</td>
-        <td>2025-05-09T00:00:00</td>
-        <td class="countdown"></td>
-      </tr>
-      <tr>
+      <tr id="row1" data-date="2025-05-21">
         <td>Monster Train 2</td>
-        <td>Full Release</td>
-        <td>2025-05-21T00:00:00</td>
-        <td class="countdown"></td>
+        <td>21 maja 2025</td>
+        <td>PC, PS5, Xbox, Switch</td>
+        <td><span id="countdown1"></span></td>
       </tr>
-      <tr>
-        <td>The Division 2: Battle for Brooklyn DLC</td>
-        <td>Release</td>
-        <td>2025-05-27T00:00:00</td>
-        <td class="countdown"></td>
+      <tr id="row2" data-date="2025-05-27">
+        <td>The Division 2: Battle for Brooklyn</td>
+        <td>27 maja 2025</td>
+        <td>PC, PS5, Xbox</td>
+        <td><span id="countdown2"></span></td>
       </tr>
-      <tr>
+      <tr id="row3" data-date="2025-06-10">
+        <td>Dune: Awakening</td>
+        <td>10 czerwca 2025</td>
+        <td>PC (Early Access)</td>
+        <td><span id="countdown3"></span></td>
+      </tr>
+      <tr id="row4" data-date="2025-06-26">
         <td>Death Stranding 2: On the Beach</td>
-        <td>Early Access</td>
-        <td>2025-06-24T00:00:00</td>
-        <td class="countdown"></td>
+        <td>26 czerwca 2025</td>
+        <td>PS5</td>
+        <td><span id="countdown4"></span></td>
       </tr>
-      <tr>
+      <tr id="row5" data-date="2025-10-02">
         <td>Ghost of Yōtei</td>
-        <td>Release</td>
-        <td>2025-10-02T00:00:00</td>
-        <td class="countdown"></td>
+        <td>2 października 2025</td>
+        <td>PS5</td>
+        <td><span id="countdown5"></span></td>
       </tr>
     </tbody>
   </table>
 
   <script>
-    // Pobiera wszystkie komórki, w których wyświetlamy odliczanie
-    const rows = document.querySelectorAll('#countdown-table tbody tr');
+    function startCountdown(id, rowId, targetDate) {
+      function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+        const row = document.getElementById(rowId);
 
-    function updateCountdown() {
-      const now = new Date();
-
-      rows.forEach(row => {
-        const dateCell = row.cells[2];
-        const targetDate = new Date(dateCell.textContent);
-        const diff = targetDate - now;
-
-        if (diff <= 0) {
-          row.querySelector('.countdown').textContent = '—';
+        if (distance < 0) {
+          document.getElementById(id).innerText = "Już dostępne!";
+          row.classList.remove("highlight-hot", "highlight-warm");
           return;
         }
 
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-        row.querySelector('.countdown').textContent =
-          `${days}d ${hours}h ${minutes}m ${seconds}s`;
-      });
+        document.getElementById(id).innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+        // Podświetlenie
+        row.classList.remove("highlight-hot", "highlight-warm");
+        if (days < 2) {
+          row.classList.add("highlight-hot");
+        } else if (days < 7) {
+          row.classList.add("highlight-warm");
+        }
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
     }
 
-    // Aktualizuj odliczanie co 1 sekundę
-    setInterval(updateCountdown, 1000);
-    // Pierwsze wywołanie od razu przy wczytaniu
-    updateCountdown();
-  </script>
+    function sortTable() {
+      const table = document.getElementById("gameTable");
+      const rows = Array.from(table.rows).slice(1);
+      const sortedRows = rows.sort((rowA, rowB) => {
+        const dateA = new Date(rowA.getAttribute("data-date"));
+        const dateB = new Date(rowB.getAttribute("data-date"));
+        return dateA - dateB;
+      });
 
+      sortedRows.forEach(row => table.appendChild(row));  // Zaktualizuj kolejność
+    }
+
+    // Ustaw daty premier (miesiące w JavaScript są indeksowane od 0)
+    startCountdown("countdown1", "row1", new Date(2025, 4, 21).getTime()); // 21 maja 2025
+    startCountdown("countdown2", "row2", new Date(2025, 4, 27).getTime()); // 27 maja 2025
+    startCountdown("countdown3", "row3", new Date(2025, 5, 10).getTime()); // 10 czerwca 2025
+    startCountdown("countdown4", "row4", new Date(2025, 5, 26).getTime()); // 26 czerwca 2025
+    startCountdown("countdown5", "row5", new Date(2025, 9, 2).getTime());  // 2 października 2025
+  </script>
 </body>
 </html>
