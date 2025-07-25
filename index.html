@@ -1,117 +1,1174 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Odliczanie do premier gier</title>
-  <style>
-    body { font-family: Arial, sans-serif; background-color: #1e1e1e; color: #f0f0f0; padding: 20px; }
-    h1 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 12px; border: 1px solid #444; text-align: center; }
-    th { background-color: #333; color: #fff; }
-    tr:nth-child(even) { background-color: #2a2a2a; }
-    tr:nth-child(odd) { background-color: #1e1e1e; }
-    .highlight-hot { background-color: #5c1e1e !important; color: #ff6666; }
-    .highlight-warm { background-color: #4e3b1f !important; color: #ffcc66; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nadchodzące Premiery Gier</title>
+    <style>
+        /* Wszystkie style pozostają takie same */
+        :root {
+            --primary-orange: #FFA500;
+            --darker-orange: #ff8c00;
+            --background-dark: #1a1a1a;
+            --card-background: #2a2a2a;
+            --text-light: #ffffff;
+            --text-medium: #888;
+            --text-dark: #1a1a1a;
+            --border-color: #444;
+            --input-background: #333;
+            --highlight-background: #FFA500;
+            --delete-red: #dc3545;
+            --delete-red-hover: #c82333;
+            --edit-blue: #007bff;
+            --edit-blue-hover: #0056b3;
+            --save-green: #28a745;
+            --save-green-hover: #218838;
+            --cancel-grey: #6c757d;
+            --cancel-grey-hover: #5a6268;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-light);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 30px 0;
+            color: var(--primary-orange);
+        }
+
+        /* Main wrapper for calendar and add game sections */
+        .main-controls-wrapper {
+            display: flex;
+            justify-content: space-between; /* Pushes items to ends */
+            align-items: flex-start; /* Aligns them at the top */
+            max-width: 1160px; /* Adjusted to match games-grid effective width (1200px - 2*20px padding) */
+            margin: 0 auto 30px auto; /* Center it and add bottom margin */
+            gap: 20px; /* Add a gap between the two sections */
+        }
+
+        /* Calendar Wrapper Styles */
+        .calendar-wrapper {
+            background-color: transparent; /* Initially transparent */
+            border-radius: 10px;
+            padding: 0; /* Initially no padding */
+            box-shadow: none; /* Initially no shadow */
+            transition: background-color 0.5s ease, box-shadow 0.5s ease, padding 0.5s ease;
+            flex: 1; /* Allow it to grow and take equal space */
+            position: relative; /* Keep relative for correct hover state calculation */
+        }
+
+        /* Hover state for the entire calendar wrapper - applies background and padding */
+        .calendar-wrapper:hover {
+            background-color: var(--card-background);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding: 18px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--input-background); /* Tło przycisku */
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: block;
+            width: 100%; /* Make the button fill its flex container */
+            margin: 0 auto 18px auto; /* Center the button and push content below */
+        }
+
+        .calendar-header:hover {
+            background-color: #444;
+            transform: translateY(-2px);
+        }
+
+        .calendar-header h2 {
+            color: var(--primary-orange);
+            font-size: 1.6em;
+            margin: 0;
+        }
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+            gap: 13px;
+            max-height: 0; /* Changed from max-width to max-height */
+            overflow: hidden; /* Ensures content is hidden below max-height */
+            opacity: 0;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out; /* Animate max-height */
+            /* No background, padding, shadow here, it's provided by the parent .calendar-wrapper:hover */
+        }
+
+        /* Show months-grid on hover of calendar-wrapper */
+        .calendar-wrapper:hover .months-grid {
+            max-height: 2000px; /* Adjust to a suitable max-height for vertical expansion */
+            opacity: 1;
+        }
+
+        .month-card {
+            background-color: var(--input-background);
+            border-radius: 8px;
+            padding: 13px;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .month-name {
+            color: var(--primary-orange);
+            font-size: 1em;
+            margin-bottom: 9px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .day-header, .day-cell {
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .day-header {
+            background-color: var(--border-color);
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        .day-cell {
+            background-color: #222;
+            color: #eee;
+        }
+
+        .day-cell.empty {
+            background-color: transparent;
+            color: #555;
+        }
+
+        .day-cell.highlighted {
+            background-color: var(--highlight-background);
+            color: var(--text-dark);
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(255,165,0,0.5);
+            transform: scale(1.05);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        /* Games Grid Styles */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .game-card {
+            background-color: var(--card-background);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease, background 0.5s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(255,165,0,0.1);
+            /* Odwrócony gradient: pomarańczowy zaczyna się w prawym górnym rogu, czarny w lewym dolnym */
+            background: linear-gradient(to bottom left, var(--background-dark), var(--primary-orange));
+        }
+
+        .game-info {
+            padding: 20px;
+        }
+
+        .game-title {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: var(--primary-orange);
+        }
+
+        .game-title a {
+            color: var(--primary-orange);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .game-title a:hover {
+            color: var(--darker-orange);
+            text-decoration: underline;
+        }
+
+        .release-date {
+            color: var(--text-medium);
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        .release-date input[type="datetime-local"] {
+            width: calc(100% - 10px);
+            padding: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--input-background);
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .platform {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: var(--border-color);
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin: 5px 5px 5px 0;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Platform specific hover styles */
+        .platform.pc:hover {
+            background-color: var(--primary-orange);
+            color: var(--text-dark);
+        }
+
+        .platform.ps5:hover {
+            background-color: var(--edit-blue);
+            color: var(--text-light);
+        }
+
+        .platform.xbox:hover {
+            background-color: #107C10; /* Green */
+            color: var(--text-light);
+        }
+
+        .platform.switch:hover {
+            background-color: #E60012; /* Red */
+            color: var(--text-light);
+        }
+
+        .countdown {
+            background-color: var(--input-background);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .countdown span {
+            color: var(--primary-orange);
+            font-weight: bold;
+            padding: 0 5px;
+        }
+
+        .current-time {
+            text-align: center;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        /* Add Game Wrapper Styles */
+        .add-game-wrapper {
+            background-color: transparent; /* Initially transparent */
+            border-radius: 10px;
+            padding: 0; /* Initially no padding */
+            box-shadow: none; /* Initially no shadow */
+            transition: background-color 0.5s ease, box-shadow 0.5s ease, padding 0.5s ease;
+            flex: 1; /* Allow it to grow and take equal space */
+            position: relative; /* Keep relative for correct hover state calculation */
+        }
+
+        /* Hover state for the entire add game wrapper - applies background and padding */
+        .add-game-wrapper:hover {
+            background-color: var(--card-background);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding: 18px;
+        }
+
+        .add-game-header {
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--input-background);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: block;
+            width: 100%; /* Make the button fill its flex container */
+            margin: 0 auto 18px auto; /* Center the button and push content below */
+        }
+
+        .add-game-header:hover {
+            background-color: #444;
+            transform: translateY(-2px);
+        }
+
+        .add-game-header h2 {
+            color: var(--primary-orange);
+            font-size: 1.6em;
+            margin: 0;
+        }
+
+        .add-game-form-content {
+            max-height: 0; /* Changed from max-width to max-height */
+            overflow: hidden; /* Ensures content is hidden below max-height */
+            opacity: 0;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out; /* Animate max-height */
+            /* No background, padding, shadow here, it's provided by the parent .add-game-wrapper:hover */
+        }
+
+        /* Show add-game-form-content on hover of add-game-wrapper */
+        .add-game-wrapper:hover .add-game-form-content {
+            max-height: 2000px; /* Adjust to a suitable max-height for vertical expansion */
+            opacity: 1;
+        }
+
+        /* Form elements inside the collapsed section */
+        .add-game-form-content .form-group label {
+            font-size: 1em;
+            color: var(--primary-orange);
+        }
+
+        .add-game-form-content .form-group input[type="text"],
+        .add-game-form-content .form-group input[type="datetime-local"],
+        .add-game-form-content .form-group input[type="url"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--input-background);
+            color: var(--text-light);
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .add-game-form-content .platform-checkboxes {
+            gap: 10px;
+        }
+
+        .add-game-form-content .platform-checkbox {
+            font-size: 1em;
+        }
+
+        .add-game-form-content .add-game-btn {
+            background-color: var(--input-background); /* Changed to dark background */
+            color: var(--primary-orange); /* Changed to orange text */
+            border: 1px solid var(--primary-orange); /* Added orange border */
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Added color and border-color to transition */
+            font-size: 1em;
+        }
+
+        .add-game-form-content .add-game-btn:hover {
+            background-color: var(--primary-orange); /* On hover, it becomes orange */
+            color: var(--text-dark); /* Text becomes dark on hover */
+            border-color: var(--primary-orange); /* Border remains orange on hover */
+        }
+
+        /* Styles for the delete button */
+        .delete-game-btn {
+            background-color: var(--delete-red);
+            color: var(--text-light);
+            border: none;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .delete-game-btn:hover {
+            background-color: var(--delete-red-hover);
+        }
+
+        /* Animation for filling effect */
+        .delete-game-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(255, 255, 255, 0.4) var(--fill-angle, 0deg), rgba(255, 255, 255, 0.1) var(--fill-angle, 0deg));
+            z-index: 1;
+            transition: --fill-angle 1s linear;
+        }
+        
+        .delete-game-btn span {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+    .delete-game-btn::after {
+            content: 'X';
+            font-size: 0.9em;
+            font-weight: bold;
+            color: var(--text-light);
+            position: relative;
+            z-index: 2;
+            line-height: 1;
+        }
+
+        /* Styles for the new edit button */
+        .edit-game-btn {
+            background-color: var(--edit-blue);
+            color: var(--text-light);
+            border: none;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            right: 41px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            z-index: 10;
+        }
+
+        .edit-game-btn:hover {
+            background-color: var(--edit-blue-hover);
+        }
+
+        .edit-game-btn::after {
+            content: '✎';
+            font-size: 0.9em;
+            font-weight: bold;
+            color: var(--text-light);
+            line-height: 1;
+        }
+
+        .edit-game-btn span {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Styles for save/cancel buttons during edit mode */
+        .edit-controls {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .edit-controls button {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .edit-controls .save-btn {
+            background-color: var(--save-green);
+            color: var(--text-light);
+        }
+
+        .edit-controls .save-btn:hover {
+            background-color: var(--save-green-hover);
+        }
+
+        .edit-controls .cancel-btn {
+            background-color: var(--cancel-grey);
+            color: var(--text-light);
+        }
+
+        .edit-controls .cancel-btn:hover {
+            background-color: var(--cancel-grey-hover);
+        }
+
+        /* Custom Tooltip Styles */
+        .custom-tooltip {
+            position: absolute;
+            display: none; /* Hidden by default */
+            background-color: var(--input-background);
+            color: var(--text-light);
+            padding: 12px 18px;
+            border-radius: 5px;
+            white-space: nowrap;
+            font-size: 1.2em;
+            z-index: 9999; /* Very high z-index to ensure it's on top */
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none; /* Allows clicks to pass through to elements beneath */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .custom-tooltip::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px; /* Position to the left for a right-pointing arrow */
+            transform: translateY(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: transparent var(--input-background) transparent transparent; /* Right-pointing triangle */
+        }
+    </style>
 </head>
 <body>
-  <h1>Odliczanie do premier gier</h1>
-  <button onclick="sortTable()">Sortuj odliczanie</button>
-  <table id="gameTable">
-    <thead>
-      <tr>
-        <th>Gra</th>
-        <th>Data premiery</th>
-        <th>Platformy</th>
-        <th>Odliczanie</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr id="row1" data-date="2025-05-21">
-        <td>Monster Train 2</td>
-        <td>21 maja 2025</td>
-        <td>PC, PS5, Xbox, Switch</td>
-        <td><span id="countdown1"></span></td>
-      </tr>
-      <tr id="row2" data-date="2025-05-27">
-        <td>The Division 2: Battle for Brooklyn</td>
-        <td>27 maja 2025</td>
-        <td>PC, PS5, Xbox</td>
-        <td><span id="countdown2"></span></td>
-      </tr>
-      <tr id="row3" data-date="2025-06-10">
-        <td>Dune: Awakening</td>
-        <td>10 czerwca 2025</td>
-        <td>PC (Early Access)</td>
-        <td><span id="countdown3"></span></td>
-      </tr>
-      <tr id="row4" data-date="2025-06-26">
-        <td>Death Stranding 2: On the Beach</td>
-        <td>26 czerwca 2025</td>
-        <td>PS5</td>
-        <td><span id="countdown4"></span></td>
-      </tr>
-      <tr id="row5" data-date="2025-10-02">
-        <td>Ghost of Yōtei</td>
-        <td>2 października 2025</td>
-        <td>PS5</td>
-        <td><span id="countdown5"></span></td>
-      </tr>
-    </tbody>
-  </table>
+    <div class="container">
+        <h1>Nadchodzące Premiery Gier</h1>
+        <div class="current-time" id="currentTime">
+            Aktualny czas: Ładowanie...
+        </div>
 
-  <script>
-    function startCountdown(id, rowId, targetDate) {
-      function updateCountdown() {
-        const now = new Date().getTime();
-        const distance = targetDate - now;
-        const row = document.getElementById(rowId);
+        <div class="main-controls-wrapper">
+            <div class="calendar-wrapper">
+                <div class="calendar-header" role="button" tabindex="0">
+                    <h2 id="calendarYear">Kalendarz Premier 2025</h2>
+                </div>
+                <div class="months-grid" id="monthsGrid">
+                    <!-- Calendar months will be rendered here -->
+                </div>
+            </div>
 
-        if (distance < 0) {
-          document.getElementById(id).innerText = "Już dostępne!";
-          row.classList.remove("highlight-hot", "highlight-warm");
-          return;
+            <div class="add-game-wrapper">
+                <div class="add-game-header" role="button" tabindex="0">
+                    <h2>Dodaj nową premierę</h2>
+                </div>
+                <div class="add-game-form-content">
+                    <form id="addGameForm">
+                        <div class="form-group">
+                            <label for="gameTitle">Tytuł gry:</label>
+                            <input type="text" id="gameTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="steamLink">Link do Steam (opcjonalnie):</label>
+                            <input type="url" id="steamLink" placeholder="np. https://store.steampowered.com/app/123456/">
+                        </div>
+                        <div class="form-group">
+                            <label>Platformy:</label>
+                            <div class="platform-checkboxes">
+                                <label class="platform-checkbox">
+                                    <input type="checkbox" name="platform" value="PC"> PC
+                                </label>
+                                <label class="platform-checkbox">
+                                    <input type="checkbox" name="platform" value="PS4"> PS4
+                                </label>
+                                <label class="platform-checkbox">
+                                    <input type="checkbox" name="platform" value="PS5"> PS5
+                                </label>
+                                <label class="platform-checkbox">
+                                    <input type="checkbox" name="platform" value="Switch"> Switch
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="releaseDate">Data premiery:</label>
+                            <input type="datetime-local" id="releaseDate" required>
+                        </div>
+                        <button type="submit" class="add-game-btn">Dodaj grę</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="games-grid" id="gamesGrid">
+            <!-- Game cards will be dynamically loaded here -->
+        </div>
+    </div>
+
+    <!-- Custom Tooltip element -->
+    <div id="custom-tooltip" class="custom-tooltip"></div>
+
+    <script>
+        // Array to store game data
+        let games = [];
+        let customTooltip; // Global reference for the custom tooltip element
+        let tooltipHideTimeout; // Variable to manage the hiding timeout for the tooltip
+
+        // Function to generate a unique ID for games
+        function generateUniqueId(title) {
+            return title.toLowerCase().replace(/\s/g, '-') + '-' + Date.now();
         }
 
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        document.getElementById(id).innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-        // Podświetlenie
-        row.classList.remove("highlight-hot", "highlight-warm");
-        if (days < 2) {
-          row.classList.add("highlight-hot");
-        } else if (days < 7) {
-          row.classList.add("highlight-warm");
+        // Function to filter platforms based on the allowed list
+        const allowedPlatforms = ["PC", "PS4", "PS5", "Switch"];
+        function filterPlatforms(platforms) {
+            return platforms.filter(platform => allowedPlatforms.includes(platform));
         }
-      }
 
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
-    }
+        // Initial default games (will be overridden by localStorage if data exists)
+        const defaultGames = [
+            {
+                id: 'dying-light-the-beast', // Added unique ID
+                title: "Dying Light: The Beast",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-08-22T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/3008130/Dying_Light_The_Beast/"
+            },
+            {
+                id: 'borderlands-4', // Added unique ID
+                title: "Borderlands 4",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-09-12T00:00:00Z",
+                steamLink: null // No direct Steam link found, primarily Epic Games Store
+            },
+            {
+                id: 'frosthaven', // Added unique ID
+                title: "Frosthaven",
+                platforms: ["PC", "PS5", "Switch"], // Filtered platforms
+                releaseDate: "2025-07-31T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/2347080/Frosthaven/"
+            },
+            {
+                id: 'ghost-of-yotei', // Added unique ID
+                title: "Ghost of Yotei",
+                platforms: ["PS5"], // Filtered platforms
+                releaseDate: "2025-10-02T00:00:00Z",
+                steamLink: null // PlayStation exclusive
+            },
+            // Nowe gry
+            {
+                id: 'little-nightmares-3',
+                title: "Little Nightmares 3",
+                platforms: ["PC", "PS4", "PS5", "Switch"], // Filtered platforms
+                releaseDate: "2025-10-10T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/2765920/Little_Nightmares_III/"
+            },
+            {
+                id: 'europa-universalis-v',
+                title: "Europa Universalis V",
+                platforms: ["PC"], // Filtered platforms
+                releaseDate: "2025-12-31T00:00:00Z", // Data orientacyjna (TBD)
+                steamLink: "https://store.steampowered.com/app/3450310/Europa_Universalis_V/"
+            },
+            {
+                id: 'anno-117-pax-romana',
+                title: "Anno 117: Pax Romana",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-11-13T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/3274580/Anno_117_Pax_Romana/"
+            },
+            {
+                id: 'cronos-new-dawn',
+                title: "Cronos: The New Dawn",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-11-15T00:00:00Z", // Przybliżona data dla Q4 2025
+                steamLink: "https://store.steampowered.com/app/2101960/Cronos_The_New_Dawn/"
+            },
+            {
+                id: 'silent-hill-f',
+                title: "Silent Hill F",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-09-25T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/2947440/SILENT_HILL_f/"
+            },
+            // Nowa gra: ARC Raiders
+            {
+                id: 'arc-raiders',
+                title: "ARC Raiders",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-10-30T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/1808500/ARC_Raiders/"
+            }
+        ];
 
-    function sortTable() {
-      const table = document.getElementById("gameTable");
-      const rows = Array.from(table.rows).slice(1);
-      const sortedRows = rows.sort((rowA, rowB) => {
-        const dateA = new Date(rowA.getAttribute("data-date"));
-        const dateB = new Date(rowB.getAttribute("data-date"));
-        return dateA - dateB;
-      });
+        // Function to update the current time display
+        function updateCurrentTime() {
+            const timeElement = document.getElementById('currentTime');
+            const now = new Date();
+            // Format the date to YYYY-MM-DD HH:MM:SS UTC
+            const formattedDate = now.toISOString().slice(0, 19).replace('T', ' ');
+            timeElement.textContent = `Aktualny czas: ${formattedDate} UTC`;
+        }
 
-      sortedRows.forEach(row => table.appendChild(row));  // Zaktualizuj kolejność
-    }
+        // Function to update countdowns for all game cards
+        function updateCountdowns() {
+            const countdownElements = document.querySelectorAll('.countdown');
+            
+            countdownElements.forEach(element => {
+                // Only update if not in edit mode
+                if (!element.classList.contains('editing')) {
+                    const releaseDate = new Date(element.dataset.release);
+                    const now = new Date();
+                    const difference = releaseDate - now;
 
-    // Ustaw daty premier (miesiące w JavaScript są indeksowane od 0)
-    startCountdown("countdown1", "row1", new Date(2025, 4, 21).getTime()); // 21 maja 2025
-    startCountdown("countdown2", "row2", new Date(2025, 4, 27).getTime()); // 27 maja 2025
-    startCountdown("countdown3", "row3", new Date(2025, 5, 10).getTime()); // 10 czerwca 2025
-    startCountdown("countdown4", "row4", new Date(2025, 5, 26).getTime()); // 26 czerwca 2025
-    startCountdown("countdown5", "row5", new Date(2025, 9, 2).getTime());  // 2 października 2025
-  </script>
+                    if (difference <= 0) {
+                        element.innerHTML = '<span>Gra już wydana!</span>';
+                        return;
+                    }
+
+                    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                    element.innerHTML = `
+                        Do premiery pozostało:<br>
+                        <span>${days}</span> dni 
+                        <span>${hours}</span> godz 
+                        <span>${minutes}</span> min 
+                        <span>${seconds}</span> sek
+                    `;
+                }
+            });
+        }
+
+        // Function to sort games by release date (earliest first)
+        function sortGamesByReleaseDate(gamesArray) {
+            return gamesArray.sort((a, b) => {
+                const dateA = new Date(a.releaseDate);
+                const dateB = new Date(b.releaseDate);
+                return dateA - dateB;
+            });
+        }
+
+        // Function to render all games from the 'games' array
+        function renderGames() {
+            const gamesGrid = document.getElementById('gamesGrid');
+            gamesGrid.innerHTML = ''; // Clear existing cards
+
+            // Sort games before rendering
+            const sortedGames = sortGamesByReleaseDate(games);
+
+            sortedGames.forEach(game => {
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+                gameCard.dataset.id = game.id; 
+                
+                // Format release date for display (DD.MM.YYYY)
+                const displayDate = new Date(game.releaseDate).toLocaleDateString('pl-PL', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+
+                // Map platform names to CSS classes for hover effects
+                const platformClasses = {
+                    'PC': 'pc',
+                    'PS4': 'ps5', 
+                    'PS5': 'ps5',
+                    'Switch': 'switch'
+                };
+
+                // Create title HTML, with a link if steamLink exists
+                const titleHtml = game.steamLink 
+                    ? `<a href="${game.steamLink}" target="_blank">${game.title}</a>`
+                    : game.title;
+
+                gameCard.innerHTML = `
+                    <div class="game-info">
+                        <h2 class="game-title">${titleHtml}</h2>
+                        <div class="platforms">
+                            ${game.platforms.map(platform => `<span class="platform ${platformClasses[platform] || ''}">${platform}</span>`).join('')}
+                        </div>
+                        <p class="release-date" data-game-id="${game.id}">Data premiery: ${displayDate}</p>
+                        <div class="countdown" data-release="${game.releaseDate}">
+                            Ładowanie licznika...
+                        </div>
+                    </div>
+                    <button class="delete-game-btn" data-id="${game.id}">
+                        <span>Usuń grę</span>
+                    </button>
+                    <button class="edit-game-btn" data-id="${game.id}">
+                        <span>Edytuj datę</span>
+                    </button>
+                `;
+                gamesGrid.appendChild(gameCard);
+            });
+            updateCountdowns(); // Update countdowns for newly rendered cards
+            attachDeleteButtonListeners(); // Attach listeners to delete buttons
+            attachEditButtonListeners(); // Attach listeners to new edit buttons
+            renderCalendar(); // Re-render calendar after game list changes
+        }
+
+        // Function to save games to local storage
+        function saveGamesToLocalStorage() {
+            try {
+                localStorage.setItem('gameReleases', JSON.stringify(games));
+            } catch (e) {
+                console.error("Błąd podczas zapisywania do localStorage:", e);
+            }
+        }
+
+        // Function to load games from local storage
+        function loadGamesFromLocalStorage() {
+            try {
+                const storedGames = localStorage.getItem('gameReleases');
+                if (storedGames) {
+                    games = JSON.parse(storedGames);
+                    // Ensure each loaded game has an ID and steamLink, for compatibility with older saves
+                    games = games.map(game => ({ 
+                        ...game, 
+                        id: game.id || generateUniqueId(game.title),
+                        steamLink: game.steamLink || null, // Ensure steamLink exists, default to null
+                        // Filter platforms for existing games loaded from localStorage
+                        platforms: filterPlatforms(game.platforms || [])
+                    }));
+                } else {
+                    // If no games in local storage, use default games and add IDs/steamLinks
+                    games = defaultGames.map(game => ({ 
+                        ...game, 
+                        id: game.id || generateUniqueId(game.title),
+                        steamLink: game.steamLink || null, // Ensure steamLink exists, default to null
+                        // Filter platforms for default games
+                        platforms: filterPlatforms(game.platforms || [])
+                    }));
+                }
+            } catch (e) {
+                console.error("Błąd podczas ładowania z localStorage:", e);
+                // Fallback to default games if parsing fails
+                games = defaultGames.map(game => ({ 
+                    ...game, 
+                    id: game.id || generateUniqueId(game.title),
+                    steamLink: game.steamLink || null,
+                    platforms: filterPlatforms(game.platforms || [])
+                }));
+            }
+            // Sort games immediately after loading or setting defaults
+            games = sortGamesByReleaseDate(games);
+        }
+
+        // Function to handle deleting a game
+        function deleteGame(gameId) {
+            // Filter out the game with the given ID
+            games = games.filter(game => game.id !== gameId);
+            saveGamesToLocalStorage(); // Save updated array
+            renderGames(); // Re-render the grid (which will re-sort and update calendar)
+        }
+
+        // Function to attach event listeners to delete buttons
+        function attachDeleteButtonListeners() {
+            document.querySelectorAll('.delete-game-btn').forEach(button => {
+                let hoverTimeout; // Variable to hold the timeout ID
+
+                // Mouse enter event: start the fill animation and timeout
+                button.addEventListener('mouseenter', () => {
+                    // Reset to 0 immediately (no transition)
+                    button.style.setProperty('--fill-angle', '0deg'); 
+                    // Force a reflow to ensure the 0deg is "seen" by the browser before starting the transition
+                    button.offsetWidth; // Trigger reflow
+                    // Now set to 360deg, and the CSS transition will apply
+                    button.style.setProperty('--fill-angle', '360deg');
+                    // Add the class to indicate it's filling (for data-readyToDelete logic)
+                    button.classList.add('is-filling'); 
+
+                    hoverTimeout = setTimeout(() => {
+                        if (button.classList.contains('is-filling')) { // Check if still filling
+                            button.dataset.readyToDelete = 'true';
+                        }
+                    }, 1000);
+                });
+
+                // Mouse leave event: clear timeout and reset animation
+                button.addEventListener('mouseleave', () => {
+                    clearTimeout(hoverTimeout);
+                    button.classList.remove('is-filling');
+                    button.dataset.readyToDelete = 'false';
+                    // Immediately reset the angle without transition
+                    button.style.setProperty('--fill-angle', '0deg'); 
+                });
+
+                // Click event: perform deletion if ready
+                button.addEventListener('click', () => {
+                    if (button.dataset.readyToDelete === 'true') {
+                        const gameIdToDelete = button.dataset.id;
+                        deleteGame(gameIdToDelete);
+                    }
+                    // Always reset after click, regardless of deletion
+                    clearTimeout(hoverTimeout);
+                    button.classList.remove('is-filling');
+                    button.dataset.readyToDelete = 'false';
+                    button.style.setProperty('--fill-angle', '0deg');
+                });
+            });
+        }
+
+        // Function to attach event listeners to edit buttons
+        function attachEditButtonListeners() {
+            document.querySelectorAll('.edit-game-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const gameIdToEdit = button.dataset.id;
+                    const gameCard = button.closest('.game-card');
+                    const gameInfo = gameCard.querySelector('.game-info');
+                    const releaseDateP = gameInfo.querySelector('.release-date');
+                    const countdownDiv = gameInfo.querySelector('.countdown');
+
+                    // Find the game in the array
+                    const game = games.find(g => g.id === gameIdToEdit);
+                    if (!game) return;
+
+                    // Hide original buttons
+                    gameCard.querySelector('.delete-game-btn').style.display = 'none';
+                    gameCard.querySelector('.edit-game-btn').style.display = 'none';
+
+                    // Add 'editing' class to countdown div to pause updates
+                    countdownDiv.classList.add('editing');
+
+                    // Convert ISO string to format suitable for datetime-local input (YYYY-MM-DDTHH:mm)
+                    const currentReleaseDateTimeLocal = game.releaseDate.substring(0, 16);
+
+                    // Replace release date paragraph with input field
+                    releaseDateP.innerHTML = `
+                        Data premiery: <input type="datetime-local" id="editReleaseDateInput-${gameIdToEdit}" value="${currentReleaseDateTimeLocal}">
+                    `;
+
+                    // Replace countdown div with save/cancel buttons
+                    countdownDiv.innerHTML = `
+                        <div class="edit-controls">
+                            <button class="save-btn" data-id="${gameIdToEdit}">Zapisz</button>
+                            <button class="cancel-btn" data-id="${gameIdToEdit}">Anuluj</button>
+                        </div>
+                    `;
+
+                    // Attach listeners to new save/cancel buttons
+                    gameCard.querySelector('.save-btn').addEventListener('click', (e) => {
+                        const newDateTimeLocal = document.getElementById(`editReleaseDateInput-${gameIdToEdit}`).value;
+                        if (newDateTimeLocal) {
+                            const newIsoString = new Date(newDateTimeLocal).toISOString();
+                            // Update the game object in the array
+                            const gameIndex = games.findIndex(g => g.id === gameIdToEdit);
+                            if (gameIndex !== -1) {
+                                games[gameIndex].releaseDate = newIsoString;
+                                saveGamesToLocalStorage(); // Save changes
+                                renderGames(); // Re-render to update UI and sort (and calendar)
+                            }
+                        } else {
+                            console.error("Proszę wybrać datę i czas.");
+                            // Optionally, show a user-friendly message
+                        }
+                    });
+
+                    gameCard.querySelector('.cancel-btn').addEventListener('click', () => {
+                        renderGames(); // Re-render to revert changes (and calendar)
+                    });
+                });
+            });
+        }
+
+        // --- Custom Tooltip Functions ---
+        function showTooltip(event) {
+            // Clear any existing hide timeout immediately
+            clearTimeout(tooltipHideTimeout);
+
+            const dayCell = event.currentTarget;
+            const tooltipText = dayCell.dataset.tooltip;
+            if (!tooltipText) return;
+
+            customTooltip.textContent = tooltipText;
+            const rect = dayCell.getBoundingClientRect();
+
+            // Position to the right of the dayCell, accounting for scroll
+            customTooltip.style.left = (rect.right + 10 + window.scrollX) + 'px';
+            customTooltip.style.top = (rect.top + rect.height / 2 + window.scrollY) + 'px';
+            customTooltip.style.transform = 'translateY(-50%)'; // Center vertically relative to the day cell
+
+            customTooltip.style.display = 'block';
+            // Use a small timeout to ensure display:block is applied before opacity transition
+            setTimeout(() => {
+                customTooltip.style.opacity = '1';
+            }, 10);
+        }
+
+        function hideTooltip() {
+            // Set a timeout to hide the tooltip after a short delay
+            tooltipHideTimeout = setTimeout(() => {
+                customTooltip.style.opacity = '0';
+                // Hide completely after transition to allow it to animate out
+                setTimeout(() => {
+                    customTooltip.style.display = 'none';
+                }, 200); // Match CSS transition duration for opacity
+            }, 50); // Small delay before starting to hide, can be adjusted
+        }
+        // --- End Custom Tooltip Functions ---
+
+        // Calendar rendering functions
+        function renderCalendar() {
+            const currentYear = new Date().getFullYear();
+            document.getElementById('calendarYear').textContent = `Kalendarz Premier ${currentYear}`;
+            const monthsGrid = document.getElementById('monthsGrid');
+            monthsGrid.innerHTML = ''; // Clear existing calendar
+
+            const monthNames = [
+                "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
+                "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
+            ];
+            const dayNames = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Nie"];
+
+            // Create a Map to store game titles for each release date
+            const releaseDatesMap = new Map();
+            const monthsWithReleases = new Set(); // Keep track of months with releases
+
+            games.forEach(game => {
+                const date = new Date(game.releaseDate);
+                const year = date.getFullYear();
+                const month = date.getMonth(); // 0-11
+                const day = date.getDate();
+
+                if (year === currentYear) { // Only consider releases for the current year
+                    const formattedDate = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                    if (!releaseDatesMap.has(formattedDate)) {
+                        releaseDatesMap.set(formattedDate, []);
+                    }
+                    releaseDatesMap.get(formattedDate).push(game.title);
+                    monthsWithReleases.add(month); // Add month index to the set
+                }
+            });
+
+            // Loop through all months to maintain order, but only render if there are releases
+            for (let i = 0; i < 12; i++) {
+                if (!monthsWithReleases.has(i)) {
+                    continue; // Skip rendering if no releases in this month
+                }
+
+                const monthCard = document.createElement('div');
+                monthCard.className = 'month-card';
+
+                const monthName = document.createElement('div');
+                monthName.className = 'month-name';
+                monthName.textContent = monthNames[i];
+                monthCard.appendChild(monthName);
+
+                const daysGrid = document.createElement('div');
+                daysGrid.className = 'days-grid';
+
+                // Add day headers (Pon, Wt, etc.)
+                dayNames.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'day-header';
+                    dayHeader.textContent = day;
+                    daysGrid.appendChild(dayHeader);
+                });
+
+                const firstDayOfMonth = new Date(currentYear, i, 1);
+                // getDay() returns 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+                // Adjust to make Monday (1) the start of the week (0)
+                let startDay = firstDayOfMonth.getDay();
+                if (startDay === 0) startDay = 6; // Sunday becomes last day (index 6)
+                else startDay--; // Monday (1) becomes 0, Tuesday (2) becomes 1, etc.
+
+                const daysInMonth = new Date(currentYear, i + 1, 0).getDate();
+
+                // Add empty cells for days before the 1st of the month
+                for (let j = 0; j < startDay; j++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'day-cell empty';
+                    daysGrid.appendChild(emptyCell);
+                }
+
+                // Add actual days
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'day-cell';
+                    dayCell.textContent = day;
+
+                    // Check if this date is a release date and add tooltip
+                    const formattedDate = `${currentYear}-${(i + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                    if (releaseDatesMap.has(formattedDate)) {
+                        dayCell.classList.add('highlighted');
+                        // Store tooltip text in data-attribute for JS to pick up
+                        dayCell.dataset.tooltip = releaseDatesMap.get(formattedDate).join(', ');
+                        // Attach event listeners for the custom tooltip
+                        dayCell.addEventListener('mouseenter', showTooltip);
+                        dayCell.addEventListener('mouseleave', hideTooltip);
+                    }
+                    daysGrid.appendChild(dayCell);
+                }
+                monthCard.appendChild(daysGrid);
+                monthsGrid.appendChild(monthCard);
+            }
+        }
+
+        // Handle form submission for adding a new game
+        document.getElementById('addGameForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('gameTitle').value;
+            const steamLink = document.getElementById('steamLink').value.trim(); // Get Steam link
+            const releaseDateTime = document.getElementById('releaseDate').value;
+            const selectedPlatforms = Array.from(document.querySelectorAll('input[name="platform"]:checked'))
+                                     .map(input => input.value);
+            
+            // Filter selected platforms to ensure only allowed ones are included
+            const platforms = filterPlatforms(selectedPlatforms);
+
+            // Validate inputs
+            if (!title || !releaseDateTime || platforms.length === 0) {
+                // In a real app, you'd show a user-friendly message here instead of console.error
+                console.error("Wszystkie pola formularza muszą być wypełnione.");
+                return;
+            }
+
+            const newGame = {
+                id: generateUniqueId(title), // Generate a unique ID for the new game
+                title: title,
+                platforms: platforms,
+                // Convert to ISO string for consistent storage and countdown
+                releaseDate: new Date(releaseDateTime).toISOString(),
+                steamLink: steamLink === '' ? null : steamLink // Store null if empty
+            };
+
+            games.push(newGame); // Add new game to the array
+            saveGamesToLocalStorage(); // Save updated array to local storage
+            renderGames(); // Re-render all games (which will re-sort and update calendar)
+            e.target.reset(); // Clear the form
+        });
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            customTooltip = document.getElementById('custom-tooltip'); // Get reference to the tooltip element
+            loadGamesFromLocalStorage(); // Load games when the DOM is ready (and sort them)
+            renderGames(); // Render games and calendar
+            updateCurrentTime(); // Display current time
+            // Set intervals for continuous updates
+            setInterval(updateCountdowns, 1000);
+            setInterval(updateCurrentTime, 1000);
+        });
+    </script>
 </body>
 </html>
