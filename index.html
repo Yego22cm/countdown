@@ -565,9 +565,6 @@
         <div class="current-time" id="currentTime">
             Aktualny czas: Ładowanie...
         </div>
-        <div class="current-time" id="currentUserIdDisplay">
-            Twój ID użytkownika: Ładowanie...
-        </div>
 
         <div class="main-controls-wrapper">
             <div class="calendar-wrapper">
@@ -579,7 +576,7 @@
                 </div>
             </div>
 
-            <div class="add-game-wrapper" id="addGameFormWrapper">
+            <div class="add-game-wrapper">
                 <div class="add-game-header" role="button" tabindex="0">
                     <h2>Dodaj nową premierę</h2>
                 </div>
@@ -628,38 +625,13 @@
     <!-- Custom Tooltip element -->
     <div id="custom-tooltip" class="custom-tooltip"></div>
 
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Your web app's Firebase configuration - manually pasted
-        const firebaseConfig = {
-            apiKey: "AIzaSyDVn73l_hSPuB6dL42kEvyLtt-neBVyqRg",
-            authDomain: "countdown2137.firebaseapp.com",
-            projectId: "countdown2137",
-            storageBucket: "countdown2137.firebasestorage.app",
-            messagingSenderId: "516091331263",
-            appId: "1:516091331263:web:62f512ab12f6e50a367c0a"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // Global variables for Firebase (MUST BE USED for pathing)
-        // For GitHub Pages, appId will be derived from projectId or a default.
-        const appId = firebaseConfig.projectId || 'default-app-id'; 
-
-        let games = []; // Array to store game data
+    <script>
+        // Array to store game data
+        let games = [];
         let customTooltip; // Global reference for the custom tooltip element
         let tooltipHideTimeout; // Variable to manage the hiding timeout for the tooltip
-        let currentUserId = null; // Stores the authenticated user ID
-        let isOwner = false; // Flag to determine if the current user is the owner
 
-        // Function to generate a unique ID for games (used for default games if Firestore is empty)
+        // Function to generate a unique ID for games
         function generateUniqueId(title) {
             return title.toLowerCase().replace(/\s/g, '-') + '-' + Date.now();
         }
@@ -669,6 +641,82 @@
         function filterPlatforms(platforms) {
             return platforms.filter(platform => allowedPlatforms.includes(platform));
         }
+
+        // Initial default games (will be overridden by localStorage if data exists)
+        const defaultGames = [
+            {
+                id: 'dying-light-the-beast', // Added unique ID
+                title: "Dying Light: The Beast",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-08-22T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/3008130/Dying_Light_The_Beast/"
+            },
+            {
+                id: 'borderlands-4', // Added unique ID
+                title: "Borderlands 4",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-09-12T00:00:00Z",
+                steamLink: null // No direct Steam link found, primarily Epic Games Store
+            },
+            {
+                id: 'frosthaven', // Added unique ID
+                title: "Frosthaven",
+                platforms: ["PC", "PS5", "Switch"], // Filtered platforms
+                releaseDate: "2025-07-31T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/2347080/Frosthaven/"
+            },
+            {
+                id: 'ghost-of-yotei', // Added unique ID
+                title: "Ghost of Yotei",
+                platforms: ["PS5"], // Filtered platforms
+                releaseDate: "2025-10-02T00:00:00Z",
+                steamLink: null // PlayStation exclusive
+            },
+            // Nowe gry
+            {
+                id: 'little-nightmares-3',
+                title: "Little Nightmares 3",
+                platforms: ["PC", "PS4", "PS5", "Switch"], // Filtered platforms
+                releaseDate: "2025-10-10T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/2765920/Little_Nightmares_III/"
+            },
+            {
+                id: 'europa-universalis-v',
+                title: "Europa Universalis V",
+                platforms: ["PC"], // Filtered platforms
+                releaseDate: "2025-12-31T00:00:00Z", // Data orientacyjna (TBD)
+                steamLink: "https://store.steampowered.com/app/3450310/Europa_Universalis_V/"
+            },
+            {
+                id: 'anno-117-pax-romana',
+                title: "Anno 117: Pax Romana",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-11-13T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/3274580/Anno_117_Pax_Romana/"
+            },
+            {
+                id: 'cronos-new-dawn',
+                title: "Cronos: The New Dawn",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-11-15T00:00:00Z", // Przybliżona data dla Q4 2025
+                steamLink: "https://store.steampowered.com/app/2101960/Cronos_The_New_Dawn/"
+            },
+            {
+                id: 'silent-hill-f',
+                title: "Silent Hill F",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-09-25T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/2947440/SILENT_HILL_f/"
+            },
+            // Nowa gra: ARC Raiders
+            {
+                id: 'arc-raiders',
+                title: "ARC Raiders",
+                platforms: ["PC", "PS5"], // Filtered platforms
+                releaseDate: "2025-10-30T00:00:00Z",
+                steamLink: "https://store.steampowered.com/app/1808500/ARC_Raiders/"
+            }
+        ];
 
         // Function to update the current time display
         function updateCurrentTime() {
@@ -764,73 +812,74 @@
                             Ładowanie licznika...
                         </div>
                     </div>
-                    ${isOwner ? `
-                        <button class="delete-game-btn" data-id="${game.id}">
-                            <span>Usuń grę</span>
-                        </button>
-                        <button class="edit-game-btn" data-id="${game.id}">
-                            <span>Edytuj datę</span>
-                        </button>
-                    ` : ''}
+                    <button class="delete-game-btn" data-id="${game.id}">
+                        <span>Usuń grę</span>
+                    </button>
+                    <button class="edit-game-btn" data-id="${game.id}">
+                        <span>Edytuj datę</span>
+                    </button>
                 `;
                 gamesGrid.appendChild(gameCard);
             });
             updateCountdowns(); // Update countdowns for newly rendered cards
-            if (isOwner) { // Only attach listeners if the user is the owner
-                attachDeleteButtonListeners(); // Attach listeners to delete buttons
-                attachEditButtonListeners(); // Attach listeners to new edit buttons
-            }
+            attachDeleteButtonListeners(); // Attach listeners to delete buttons
+            attachEditButtonListeners(); // Attach listeners to new edit buttons
             renderCalendar(); // Re-render calendar after game list changes
         }
 
-        // Function to load games from Firestore
-        function loadGamesFromFirestore() {
-            // Path to public data collection in Firestore
-            const gamesCollectionRef = collection(db, `artifacts/${appId}/public/data/gameReleases`);
-            onSnapshot(gamesCollectionRef, (snapshot) => {
-                games = []; // Clear existing games
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    games.push({ 
-                        id: doc.id, // Use Firestore document ID as game ID
-                        title: data.title,
-                        platforms: filterPlatforms(data.platforms || []),
-                        releaseDate: data.releaseDate,
-                        steamLink: data.steamLink || null
-                    });
-                });
-                renderGames(); // Re-render the UI with new data
-            }, (error) => {
-                console.error("Błąd podczas ładowania gier z Firestore:", error);
-                console.error("Upewnij się, że reguły bezpieczeństwa Firestore są poprawnie ustawione!");
-                console.error("Reguła 'allow read: if request.auth != null;' jest wymagana dla wszystkich.");
-                console.error("Reguła 'allow write: if request.auth != null && request.auth.uid == '<TWÓJ_ID_WŁAŚCICIELA>';' jest wymagana dla właściciela.");
-                
-                // Fallback to default games if Firestore fails or is empty
-                if (games.length === 0) {
-                    console.warn("Ładowanie domyślnych gier, ponieważ Firestore jest niedostępny lub pusty.");
-                    games = defaultGames.map(game => ({ 
-                        ...game, 
-                        // Firestore document IDs are typically generated automatically, 
-                        // so for default games, we can use a generated ID if they don't have one.
-                        id: game.id || generateUniqueId(game.title), 
-                        steamLink: game.steamLink || null,
-                        platforms: filterPlatforms(game.platforms || [])
-                    }));
-                    renderGames();
-                }
-            });
+        // Function to save games to local storage
+        function saveGamesToLocalStorage() {
+            try {
+                localStorage.setItem('gameReleases', JSON.stringify(games));
+            } catch (e) {
+                console.error("Błąd podczas zapisywania do localStorage:", e);
+            }
         }
 
-        // Function to handle deleting a game from Firestore
-        async function deleteGame(gameId) {
+        // Function to load games from local storage
+        function loadGamesFromLocalStorage() {
             try {
-                await deleteDoc(doc(db, `artifacts/${appId}/public/data/gameReleases`, gameId));
-                console.log("Gra usunięta pomyślnie!");
+                const storedGames = localStorage.getItem('gameReleases');
+                if (storedGames) {
+                    games = JSON.parse(storedGames);
+                    // Ensure each loaded game has an ID and steamLink, for compatibility with older saves
+                    games = games.map(game => ({ 
+                        ...game, 
+                        id: game.id || generateUniqueId(game.title),
+                        steamLink: game.steamLink || null, // Ensure steamLink exists, default to null
+                        // Filter platforms for existing games loaded from localStorage
+                        platforms: filterPlatforms(game.platforms || [])
+                    }));
+                } else {
+                    // If no games in local storage, use default games and add IDs/steamLinks
+                    games = defaultGames.map(game => ({ 
+                        ...game, 
+                        id: game.id || generateUniqueId(game.title),
+                        steamLink: game.steamLink || null, // Ensure steamLink exists, default to null
+                        // Filter platforms for default games
+                        platforms: filterPlatforms(game.platforms || [])
+                    }));
+                }
             } catch (e) {
-                console.error("Błąd podczas usuwania gry:", e);
-                console.error("Sprawdź reguły bezpieczeństwa Firestore. Upewnij się, że masz uprawnienia do zapisu/usunięcia w kolekcji 'gameReleases'.");
+                console.error("Błąd podczas ładowania z localStorage:", e);
+                // Fallback to default games if parsing fails
+                games = defaultGames.map(game => ({ 
+                    ...game, 
+                    id: game.id || generateUniqueId(game.title),
+                    steamLink: game.steamLink || null,
+                    platforms: filterPlatforms(game.platforms || [])
+                }));
             }
+            // Sort games immediately after loading or setting defaults
+            games = sortGamesByReleaseDate(games);
+        }
+
+        // Function to handle deleting a game
+        function deleteGame(gameId) {
+            // Filter out the game with the given ID
+            games = games.filter(game => game.id !== gameId);
+            saveGamesToLocalStorage(); // Save updated array
+            renderGames(); // Re-render the grid (which will re-sort and update calendar)
         }
 
         // Function to attach event listeners to delete buttons
@@ -918,21 +967,20 @@
                     `;
 
                     // Attach listeners to new save/cancel buttons
-                    gameCard.querySelector('.save-btn').addEventListener('click', async (e) => {
+                    gameCard.querySelector('.save-btn').addEventListener('click', (e) => {
                         const newDateTimeLocal = document.getElementById(`editReleaseDateInput-${gameIdToEdit}`).value;
                         if (newDateTimeLocal) {
                             const newIsoString = new Date(newDateTimeLocal).toISOString();
-                            try {
-                                await updateDoc(doc(db, `artifacts/${appId}/public/data/gameReleases`, gameIdToEdit), {
-                                    releaseDate: newIsoString
-                                });
-                                console.log("Data premiery zaktualizowana pomyślnie!");
-                            } catch (error) {
-                                console.error("Błąd podczas aktualizacji daty premiery:", error);
-                                console.error("Sprawdź reguły bezpieczeństwa Firestore. Upewnij się, że masz uprawnienia do zapisu/aktualizacji w kolekcji 'gameReleases'.");
+                            // Update the game object in the array
+                            const gameIndex = games.findIndex(g => g.id === gameIdToEdit);
+                            if (gameIndex !== -1) {
+                                games[gameIndex].releaseDate = newIsoString;
+                                saveGamesToLocalStorage(); // Save changes
+                                renderGames(); // Re-render to update UI and sort (and calendar)
                             }
                         } else {
                             console.error("Proszę wybrać datę i czas.");
+                            // Optionally, show a user-friendly message
                         }
                     });
 
@@ -1077,7 +1125,7 @@
         }
 
         // Handle form submission for adding a new game
-        document.getElementById('addGameForm').addEventListener('submit', async function(e) {
+        document.getElementById('addGameForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const title = document.getElementById('gameTitle').value;
@@ -1091,165 +1139,36 @@
 
             // Validate inputs
             if (!title || !releaseDateTime || platforms.length === 0) {
+                // In a real app, you'd show a user-friendly message here instead of console.error
                 console.error("Wszystkie pola formularza muszą być wypełnione.");
                 return;
             }
 
             const newGame = {
+                id: generateUniqueId(title), // Generate a unique ID for the new game
                 title: title,
                 platforms: platforms,
+                // Convert to ISO string for consistent storage and countdown
                 releaseDate: new Date(releaseDateTime).toISOString(),
-                steamLink: steamLink === '' ? null : steamLink
+                steamLink: steamLink === '' ? null : steamLink // Store null if empty
             };
 
-            try {
-                // Add game to Firestore
-                await addDoc(collection(db, `artifacts/${appId}/public/data/gameReleases`), newGame);
-                console.log("Gra dodana pomyślnie!");
-                e.target.reset(); // Clear the form
-            } catch (error) {
-                console.error("Błąd podczas dodawania gry:", error);
-                console.error("Sprawdź reguły bezpieczeństwa Firestore. Upewnij się, że masz uprawnienia do zapisu w kolekcji 'gameReleases'.");
-            }
+            games.push(newGame); // Add new game to the array
+            saveGamesToLocalStorage(); // Save updated array to local storage
+            renderGames(); // Re-render all games (which will re-sort and update calendar)
+            e.target.reset(); // Clear the form
         });
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
             customTooltip = document.getElementById('custom-tooltip'); // Get reference to the tooltip element
+            loadGamesFromLocalStorage(); // Load games when the DOM is ready (and sort them)
+            renderGames(); // Render games and calendar
             updateCurrentTime(); // Display current time
             // Set intervals for continuous updates
             setInterval(updateCountdowns, 1000);
             setInterval(updateCurrentTime, 1000);
-
-            // Authenticate user and load data
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUserId = user.uid;
-                    // For GitHub Pages, we assume the user with the initial auth token is the owner.
-                    // In a real app, you'd have a more robust owner identification system.
-                    // For Canvas, __initial_auth_token is provided to the owner.
-                    // For GitHub Pages, we can't rely on __initial_auth_token.
-                    // A simple way to identify the owner for GitHub Pages is to hardcode their UID here,
-                    // or use a separate admin login. For this exercise, we'll assume the first user
-                    // to log in with the special token (if available) or a hardcoded UID is the owner.
-                    // Since the user asked to hardcode firebaseConfig, they are likely deploying to GH Pages.
-                    // For GH Pages, the owner's UID needs to be explicitly set or checked against.
-                    // Let's assume the owner's UID will be the one they copy from the page for rules.
-                    // For simplicity, we'll set isOwner based on a hardcoded UID for GH Pages.
-                    // However, the prompt implies that the owner is identified by the token for Canvas.
-                    // For GitHub Pages, you'd need to manually set isOwner based on a known UID.
-                    // For now, let's keep the Canvas-like behavior with __initial_auth_token check.
-                    // If __initial_auth_token is not defined (e.g., on GitHub Pages), it means
-                    // the user is not authenticated via Canvas's special token.
-                    // In a real GH Pages scenario, you'd implement an admin login.
-                    // For this exercise, we'll make a simplified assumption:
-                    // If the user's UID matches the one used in Firestore rules for write access, they are the owner.
-                    // This requires the user to manually update the code with their UID if deploying to GH Pages.
-
-                    // IMPORTANT: Replace 'YOUR_OWNER_UID_HERE' with your actual Firebase User ID (UID)
-                    // You can find your UID by inspecting the 'Twój ID użytkownika' display on the page
-                    // after it loads and you've published the app to GitHub Pages.
-                    // Example: isOwner = (currentUserId === 'your_actual_firebase_uid_here');
-                    // For now, let's keep the Canvas behavior for demonstration.
-                    if (typeof __initial_auth_token !== 'undefined') {
-                        isOwner = true; // This means it's running in a Canvas-like environment for the owner
-                    } else {
-                        // For GitHub Pages, you would need a more robust way to identify the owner.
-                        // For example, by comparing currentUserId with a hardcoded owner UID.
-                        // For now, without a hardcoded owner UID, isOwner will remain false for anonymous users.
-                        // If you deploy to GitHub Pages, you might want to uncomment and set your UID here:
-                        // isOwner = (currentUserId === 'Wklej_Tutaj_Swoj_UID_Z_Firebase');
-                    }
-                    
-                    document.getElementById('currentUserIdDisplay').textContent = `Twój ID użytkownika: ${currentUserId}`;
-                    // Show/hide add game form based on owner status
-                    const addGameFormWrapper = document.getElementById('addGameFormWrapper');
-                    if (addGameFormWrapper) { 
-                        addGameFormWrapper.style.display = isOwner ? 'block' : 'none';
-                    }
-                    loadGamesFromFirestore(); // Load games from Firestore after auth
-                } else {
-                    // Sign in anonymously if no user is authenticated (for public viewing)
-                    try {
-                        const anonUser = await signInAnonymously(auth);
-                        currentUserId = anonUser.user.uid;
-                        document.getElementById('currentUserIdDisplay').textContent = `Twój ID użytkownika: ${currentUserId} (Anonimowy)`;
-                        const addGameFormWrapper = document.getElementById('addGameFormWrapper');
-                        if (addGameFormWrapper) { 
-                            addGameFormWrapper.style.display = 'none'; // Hide form for anonymous users
-                        }
-                        loadGamesFromFirestore(); // Load games from Firestore after auth
-                    } catch (error) {
-                        console.error("Błąd logowania anonimowego:", error);
-                        document.getElementById('currentUserIdDisplay').textContent = `Błąd uwierzytelniania.`;
-                    }
-                }
-            });
         });
-
-        // Default games for initial load if Firestore is empty or fails
-        const defaultGames = [
-            {
-                title: "Dying Light: The Beast",
-                platforms: ["PC", "PS5"],
-                releaseDate: "2025-08-22T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/3008130/Dying_Light_The_Beast/"
-            },
-            {
-                title: "Borderlands 4",
-                platforms: ["PC", "PS5"],
-                releaseDate: "2025-09-12T00:00:00Z",
-                steamLink: null
-            },
-            {
-                title: "Frosthaven",
-                platforms: ["PC", "PS5", "Switch"],
-                releaseDate: "2025-07-31T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/2347080/Frosthaven/"
-            },
-            {
-                title: "Ghost of Yotei",
-                platforms: ["PS5"],
-                releaseDate: "2025-10-02T00:00:00Z",
-                steamLink: null
-            },
-            {
-                title: "Little Nightmares 3",
-                platforms: ["PC", "PS4", "PS5", "Switch"],
-                releaseDate: "2025-10-10T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/2765920/Little_Nightmares_III/"
-            },
-            {
-                title: "Europa Universalis V",
-                platforms: ["PC"],
-                releaseDate: "2025-12-31T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/3450310/Europa_Universalis_V/"
-            },
-            {
-                title: "Anno 117: Pax Romana",
-                platforms: ["PC", "PS5"],
-                releaseDate: "2025-11-13T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/3274580/Anno_117_Pax_Romana/"
-            },
-            {
-                title: "Cronos: The New Dawn",
-                platforms: ["PC", "PS5"],
-                releaseDate: "2025-11-15T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/2101960/Cronos_The_New_Dawn/"
-            },
-            {
-                title: "Silent Hill F",
-                platforms: ["PC", "PS5"],
-                releaseDate: "2025-09-25T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/2947440/SILENT_HILL_f/"
-            },
-            {
-                title: "ARC Raiders",
-                platforms: ["PC", "PS5"],
-                releaseDate: "2025-10-30T00:00:00Z",
-                steamLink: "https://store.steampowered.com/app/1808500/ARC_Raiders/"
-            }
-        ];
     </script>
 </body>
 </html>
